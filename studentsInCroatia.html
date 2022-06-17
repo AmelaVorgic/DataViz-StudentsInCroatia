@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<html>
+
+<head>
+    <svg width="1850" height="800"></svg>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+
+    <p id="selection" ;>
+        <button id="2001" onclick="updateMap(Census[0])"><span>Popis 2001.</span></button>
+        <button id="2011" onclick="updateMap(Census[1])"><span>Popis 2011.</span></button>
+        <button id="2022" onclick="updateMap(Census[2])"><span>Popis 2021.</span></button>
+    </p>
+
+</head>
+
+<style>
+    body,
+    html {
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+    }
+
+    .svg {
+        position: relative;
+        float: left;
+    }
+
+    .graph {
+        width: auto;
+    }
+
+    .axis {
+        font: 17px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: gray;
+        shape-rendering: crispEdges;
+    }
+
+    .gSvg {
+        transform: translate(1000px, 80px);
+    }
+
+    .pSvg {
+        transform: translate(1000px, 390px);
+    }
+</style>
+
+<body>
+
+    <script>
+
+        var margin = { top: 80, bottom: 0, left: 20, right: 50 };
+        var width1 = 800 - margin.left - margin.right;
+        var height1 = 900 - margin.top - margin.bottom;
+
+        var Census = ["2001", "2011", "2021"];
+
+        var svg = d3.select("svg");
+
+        var mSvg = d3.select("svg")
+            .append("g")
+            .style("float", "left")
+            .attr("class", "mSvg")
+            .attr("width", width1)
+            .attr("height", height1)
+            .append("g");
+
+        var gSvg = d3.select("svg")
+            .append("g")
+            .attr("class", "gSvg")
+            .attr("width", 1500 + margin.left + margin.right)
+            .attr("height", 1500 + margin.bottom + margin.top)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var pSvg = d3.select("svg")
+            .append("g")
+            .attr("class", "pSvg")
+            .attr("width", 1500 + margin.left + margin.right)
+            .attr("height", 1500 + margin.bottom + margin.top)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var projection = d3.geo
+            .mercator()
+            .center([0, 10])
+            .scale(6000)
+            .translate([17600, 4500])
+            .rotate([-180, 0]);
+
+        var path = d3.geo.path().projection(projection);
+
+        svg.append('text')
+            .attr("x", 450)
+            .attr("y", 30)
+            .attr("dy", ".25em")
+            .attr('font-family', 'sans-serif')
+            .attr("font-weight", "700")
+            .attr("font-size", "25px")
+            .text("Vizualizacija udjela studenata u stanovništvu prema posljednja tri popisa stanovništva");
+
+        d3.json("cro_regv3_vz.json", function (error, cro) {
+            var data = topojson.feature(cro, cro.objects.layer1);
+            mSvg.append("g")
+                .selectAll("path.county")
+                .data(data.features)
+                .enter()
+                .append("path")
+                .attr("class", "county")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .attr("fill", "gray")
+                .attr("d", path)
+                .style("stroke", "black")
+                .style("stroke-width", 1.3)
+                .style("stroke-opacity", 1.3)
+                .on("mouseover", function (d) {
+                    d3.select("#zupanija").text(d.properties.name + " županija").style("font-size", "25px")
+                    d3.select(this)
+                        .attr("r", 10)
+                        .style("fill", "darkblue")
+                        .on("mouseout", function (d) {
+                            d3.select(this).attr("r", 10).style("fill", "gray")
+                        })
+                        .on('click', d => {
+                            const data = {
+                                zupanija: d.properties.name,
+                                omjer2001: d.properties.omjer2001,
+                                omjer2011: d.properties.omjer2011,
+                                omjer2021: d.properties.omjer2021
+                            }
+                            makeGraph(data);
+                        })
+                })
+
+        })
+
+        function updateMap(selected) {
+            d3.selectAll("mSvg > *").remove();
+
+            svg.append("rect")
+                .attr("width", "30")
+                .attr("height", "30")
+                .attr("x", "50")
+                .attr("y", "90")
+                .attr("style", "fill:#a09ed3;");
+
+            svg.append("text")
+                .attr("x", "90")
+                .attr("y", "95")
+                .attr("dy", "1em")
+                .style("text-anchor", "start")
+                .text("<1.5%");
+
+            svg.append("rect")
+                .attr("width", "30")
+                .attr("height", "30")
+                .attr("x", "50")
+                .attr("y", "135")
+                .attr("style", "fill:#25269c;")
+
+            svg.append("text")
+                .attr("x", "90")
+                .attr("y", "140")
+                .attr("dy", "1em")
+                .style("text-anchor", "start")
+                .text("1.5% - 3%");
+
+            svg.append("rect")
+                .attr("width", "30")
+                .attr("height", "30")
+                .attr("x", "50")
+                .attr("y", "180")
+                .attr("style", "fill:#141491;");
+
+            svg.append("text")
+                .attr("x", "90")
+                .attr("y", "185")
+                .attr("dy", "1em")
+                .style("text-anchor", "start")
+                .text("3% - 4%");
+
+            svg.append("rect")
+                .attr("width", "30")
+                .attr("height", "30")
+                .attr("x", "50")
+                .attr("y", "225")
+                .attr("style", "fill:#020078;");
+
+            svg.append("text")
+                .attr("x", "90")
+                .attr("y", "230")
+                .attr("dy", "1em")
+                .style("text-anchor", "start")
+                .text("> 4%");
+
+            if (selected == "2001") {
+
+                d3.json("cro_regv3_vz.json", function (error, cro) {
+                    var data = topojson.feature(cro, cro.objects.layer1);
+                    var color = d3.scale.linear()
+                        .domain([0, 4])
+                        .range(["white", "darkblue"]);
+                    mSvg.append("g")
+                        .selectAll("path.county")
+                        .data(data.features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "county")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                        .attr("fill", function (d) {
+                            return color(d.properties.omjer2001)
+                        })
+                        .attr("d", path)
+                        .style("stroke", "black")
+                        .style("stroke-width", 1.3)
+                        .style("stroke-opacity", 1.3)
+                        .on("mouseover", function (d) {
+                            d3.select("#zupanija").text(d.properties.name + " županija").style("font-size", "25px")
+                            d3.select(this).attr("r", 10).style("opacity", 0.7)
+                        })
+                        .on("mouseout", function (d) {
+                            d3.select(this).attr("r", 10).style("opacity", 1);
+                        })
+                        .on('click', d => {
+                            const data = {
+                                zupanija: d.properties.name,
+                                omjer2001: d.properties.omjer2001,
+                                omjer2011: d.properties.omjer2011,
+                                omjer2021: d.properties.omjer2021
+                            }
+                            makeGraph(data);
+                        })
+                })
+
+            }
+
+            if (selected == "2011") {
+
+                d3.json("cro_regv3_vz.json", function (error, cro) {
+                    var data = topojson.feature(cro, cro.objects.layer1);
+                    var color = d3.scale.linear()
+                        .domain([0, 4])
+                        .range(["white", "darkblue"]);
+                    mSvg.append("g")
+                        .selectAll("path.county")
+                        .data(data.features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "county")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                        .attr("fill", function (d) {
+                            return color(d.properties.omjer2011)
+                        })
+                        .attr("d", path)
+                        .style("stroke", "black")
+                        .style("stroke-width", 1.3)
+                        .style("stroke-opacity", 1.3)
+                        .on("mouseover", function (d) {
+                            d3.select("#zupanija").text(d.properties.name + " županija").style("font-size", "25px")
+                            d3.select(this).attr("r", 10).style("opacity", 0.7)
+                        })
+                        .on("mouseout", function (d) {
+                            d3.select(this).attr("r", 10).style("opacity", 1);
+                        })
+                        .on('click', d => {
+                            const data = {
+                                zupanija: d.properties.name,
+                                omjer2001: d.properties.omjer2001,
+                                omjer2011: d.properties.omjer2011,
+                                omjer2021: d.properties.omjer2021
+                            }
+                            makeGraph(data);
+                        })
+
+                })
+            }
+
+            if (selected == "2021") {
+
+                d3.json("cro_regv3_vz.json", function (error, cro) {
+                    var data = topojson.feature(cro, cro.objects.layer1);
+                    var color = d3.scale.linear()
+                        .domain([0, 4])
+                        .range(["white", "darkblue"]);
+                    mSvg.append("g")
+                        .selectAll("path.county")
+                        .data(data.features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "county")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                        .attr("fill", function (d) {
+                            return color(d.properties.omjer2021)
+                        })
+                        .attr("d", path)
+                        .style("stroke", "black")
+                        .style("stroke-width", 1.3)
+                        .style("stroke-opacity", 1.3)
+                        .on("mouseover", function (d) {
+                            d3.select("#zupanija").text(d.properties.name + " županija").style("font-size", "25px")
+                            d3.select(this).attr("r", 10).style("opacity", 0.7)
+                        })
+                        .on("mouseout", function (d) {
+                            d3.select(this).attr("r", 10).style("opacity", 1);
+                        })
+                        .on('click', d => {
+                            const data = {
+                                zupanija: d.properties.name,
+                                omjer2001: d.properties.omjer2001,
+                                omjer2011: d.properties.omjer2011,
+                                omjer2021: d.properties.omjer2021
+                            }
+                            makeGraph(data);
+                        })
+                })
+            }
+        }
+
+        function makeGraph(data1) {
+            gSvg.selectAll("*").remove();
+            pSvg.selectAll("*").remove();
+
+            var data = [
+                { "Godina": "2001", "Postotak": data1.omjer2001 },
+                { "Godina": "2011", "Postotak": data1.omjer2011 },
+                { "Godina": "2021", "Postotak": data1.omjer2021 },
+            ];
+
+            const margin = { top: 20, right: 20, bottom: 100, left: 80 };
+            const width = 550 - margin.left - margin.right;
+            const height = 380 - margin.top - margin.bottom;
+
+
+            const x = d3.scale.ordinal()
+                .domain(data.map(function (d) { return d.Godina; }))
+                .rangeRoundBands([0, width], 0.5);
+
+            const y = d3.scale.linear()
+                .domain([0, 4.5])
+                .range([height, 0]);
+
+            const xAxis = d3.svg.axis().scale(x).orient("bottom");
+
+            const yAxis = d3.svg
+                .axis()
+                .scale(y)
+                .orient("left")
+                .ticks(10)
+                .innerTickSize(-width)
+                .outerTickSize(0)
+                .tickPadding(10);
+
+            gSvg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis)
+                .selectAll("text")
+                .style("text-anchor", "middle");
+
+            gSvg.append("text")
+                .attr("x", (width / 2))
+                .attr("y", -40)
+                .attr("font-weight", "bold")
+                .style("font-size", "20px")
+                .attr('font-family', 'sans-serif')
+                .style("text-anchor", "middle")
+                .text("Postotak stanovništva upisanog na fakultet");
+
+            gSvg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+
+            gSvg.append("text")
+                .attr("x", -(height / 2))
+                .attr("y", -((margin.left / 2) + 30))
+                .attr("transform", "rotate(-90)")
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("font-size", "19px")
+                .attr('font-family', 'sans-serif')
+                .text("Postotak upisanih studenata");
+
+            var barchart = gSvg.selectAll("rect")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", function (d, i) { return x(d.Godina); })
+                .attr("y", function (d, i) { return y(d.Postotak); })
+                .attr("height", function (d) { return height - y(d.Postotak); })
+                .attr("width", x.rangeBand())
+                .attr("fill", "darkblue");
+
+            pSvg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis)
+                .selectAll("text")
+                .style("text-anchor", "middle");
+
+            pSvg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+
+            pSvg.append("text")
+                .attr("x", -(height / 2))
+                .attr("y", -((margin.left / 2) + 30))
+                .attr("transform", "rotate(-90)")
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("font-size", "19px")
+                .attr('font-family', 'sans-serif')
+                .text("Postotak upisanih studenata");
+
+            pSvg.append("text")
+                .attr("x", (width / 2))
+                .attr("y", (height + (margin.bottom / 2) - 20))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("font-size", "19px")
+                .attr('font-family', 'sans-serif')
+                .text("Godina popisa stanovništva");
+
+            var valueline = d3.svg.line()
+                .x(function (d) { return x(d.Godina); })
+                .y(function (d) { return y(d.Postotak) });
+
+            pSvg.append("path")
+                .attr("class", "line")
+                .attr("d", valueline(data, function (d) { return d.Postotak; }))
+                .attr("fill", "none")
+                .attr("stroke-width", 3)
+                .style("stroke", "red");
+        }
+
+    </script>
+    <div>
+        <p id="zupanija"></p>
+    </div>
+
+</body>
