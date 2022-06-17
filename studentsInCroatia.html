@@ -135,7 +135,7 @@
                                 omjer2011: d.properties.omjer2011,
                                 omjer2021: d.properties.omjer2021
                             }
-                            makeGraph(data);
+                            createGraph(data);
                         })
                 })
 
@@ -235,7 +235,7 @@
                                 omjer2011: d.properties.omjer2011,
                                 omjer2021: d.properties.omjer2021
                             }
-                            makeGraph(data);
+                            createGraph(data);
                         })
                 })
 
@@ -276,7 +276,7 @@
                                 omjer2011: d.properties.omjer2011,
                                 omjer2021: d.properties.omjer2021
                             }
-                            makeGraph(data);
+                            createGraph(data);
                         })
 
                 })
@@ -317,13 +317,13 @@
                                 omjer2011: d.properties.omjer2011,
                                 omjer2021: d.properties.omjer2021
                             }
-                            makeGraph(data);
+                            createGraph(data);
                         })
                 })
             }
         }
 
-        function makeGraph(data1) {
+        function createGraph(data1) {
             gSvg.selectAll("*").remove();
             pSvg.selectAll("*").remove();
 
